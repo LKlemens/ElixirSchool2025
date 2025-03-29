@@ -20,5 +20,5 @@ defmodule PhoenixHelloWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :phoenix_hello
+  use Gettext.Backend, otp_app: :phoenix_hello
 end
