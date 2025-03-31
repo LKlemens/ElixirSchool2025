@@ -1,23 +1,12 @@
 # Processes in Elixir
 
-## Processes
+## Update
 
 #### git pull
 
 #### git stash ; git pull - if just pull doesn't work
 
 #### Pretty please disable AI addons from your editor
-
-<!-- livebook:{"break_markdown":true} -->
-
-Erlang and Elixir processes are:
-
-* lightweight (grow and shrink dynamically)
-* with small memory footprint,
-* fast to create and terminate,
-* the scheduling overhead is low.
-
-The theory behind a process is well explained in this blog post: https://www.erlang-solutions.com/blog/understanding-processes-for-elixir-developers/
 
 ## Basics recall
 
@@ -37,7 +26,18 @@ lambda = fn -> 12 end
 lambda.()
 ```
 
-## Staring new process
+## Processes
+
+Erlang and Elixir processes are:
+
+* lightweight (grow and shrink dynamically)
+* with small memory footprint,
+* fast to create and terminate,
+* the scheduling overhead is low.
+
+The theory behind a process is well explained in this blog post: https://www.erlang-solutions.com/blog/understanding-processes-for-elixir-developers/
+
+### Staring new process
 
 Use function `self/0` to determine the PID (process ID) of current process.
 
@@ -70,7 +70,7 @@ Process.alive?(pid) |> IO.inspect(label: "process alive?")
 
 ```
 
-A process can be shutdown during calculations by seding a :shutdown signal via Process.exit/2
+A process can be killed during calculations by seding a :shutdown signal via Process.exit/2
 
 ```elixir
 pid = spawn(fn -> 
@@ -98,7 +98,7 @@ pid |> Process.info()
 ## Comunication
 
 We can send messages to a process with `send/2` and receive them with `receive/1`:
-`receive` is blocking operation that waits for a message, while send returns immediately
+`receive` is blocking operation that waits for a message, while `send` returns immediately
 
 ```elixir
 
@@ -163,6 +163,11 @@ end)
  pid |> Process.info(:message_queue_len) |> IO.inspect()
  send(pid, {:question, "How are you?"})
  pid |> Process.info(:message_queue_len) |> IO.inspect()
+ Process.sleep(200)
+ Process.alive?(pid) |> IO.inspect(label: "is alive?")
+ Process.sleep(500)
+ Process.alive?(pid) |> IO.inspect(label: "is alive?")
+
 ```
 
 ### Naming processes
