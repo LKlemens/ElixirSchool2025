@@ -37,7 +37,6 @@ lambda = fn -> 12 end
 lambda.()
 ```
 
-
 ## Staring new process
 
 Use function `self/0` to determine the PID (process ID) of current process.
@@ -71,7 +70,7 @@ Process.alive?(pid) |> IO.inspect(label: "process alive?")
 
 ```
 
-A process can be shutdown during calculations via Process.exit/2
+A process can be shutdown during calculations by seding a :shutdown signal via Process.exit/2
 
 ```elixir
 pid = spawn(fn -> 
@@ -122,9 +121,10 @@ Process.alive?(pid) |> IO.inspect(label: "process alive?")
 
 ```elixir
 msg = {:greetings, "hello"}
+# msg = {:question, "how are u?"}
 case msg do
-    {:greetings, "hello"} -> "hi"
-    {:question, "how are u"} -> "ok"
+    {:question, msg} -> msg
+    {:greetings, msg} -> msg
 end    
 ```
 
@@ -171,19 +171,31 @@ Processe can be named via `Process.register/2` so that we do not have to remembe
 
 ```elixir
 execute_fun = fn ->
-  Process.register(self(), :krzys)
-
   receive do
     msg -> IO.inspect(msg, label: "Krzys received")
   end
 end
 
-spawn(execute_fun)
+pid = spawn(execute_fun)
+Process.register(pid, :krzys)
 
 # wait a bit for process registration
 Process.sleep(300)
 
 send(:krzys, "Hello")
+```
+
+### Getting a pid of named process
+
+```elixir
+spawn(fn ->
+    IO.inspect(self(), label: "self pid")
+    Process.register(self(), :hello)
+    Process.sleep(300)
+end)
+Process.sleep(100)
+Process.whereis(:hello) |> IO.inspect(label: ":hello pid got by whereis")
+
 ```
 
 ### Communication cont.
@@ -234,30 +246,24 @@ Tu run tests please run `mix test --only test1` command in `ElixirSchool2025/cla
 
 ## Monitors
 
-Monitor is a way of observing how some other process is doing. When process A monitors process B, and process B crushes, process A gets notified by receiving a message: `{'DOWN', ref, :process, pidB, reason}`. Monitors are unidrectional which means that if A monitors B, B does not know it is monitored.
-
-```elixir
-pidB =
-  spawn(fn ->
-    Process.register(self(), B)
-
-    receive do
-      :crash -> 1 = 2
-      :die_normally -> :ok
-    end
-  end)
-
-Process.alive?(pidB)
-```
+Monitor is a way of observing how some other process is doing. When process A monitors process B, and process B crushes, process A gets notified by receiving a message: `{:DOWN, ref, :process, pidB, reason}`. Monitors are unidrectional which means that if A monitors B, B does not know it is monitored.
 
 Process can die in either normal or unnormal way. Normal is when it runs out of code do execute, and unnormal is when is crashses, for example by trying to match `2` to value `1`.
 
 ```elixir
+spawn(fn ->
+  Process.register(self(), :B)
+  receive do
+    :crash -> 1 = 2
+    :die_normally -> :ok
+  end
+end)
+
+
 # crash scenario
-spawn(fn -> 
-    Process.register(self(), A)
-    Process.monitor(B)
-    send(B, :crash)
+pidA = spawn(fn -> 
+    Process.monitor(:B)
+    send(:B, :crash)
 
     receive do
       msg -> IO.inspect(msg, label: "A received")
@@ -268,11 +274,18 @@ end)
 ```
 
 ```elixir
+spawn(fn ->
+  Process.register(self(), :B)
+  receive do
+    :crash -> 1 = 2
+    :die_normally -> :ok
+  end
+end)
+
 # normal termination scenario
-spawn(fn -> 
-    Process.register(self(), A)
-    Process.monitor(B)
-    send(B, :die_normally)
+pidA = spawn(fn -> 
+    Process.monitor(:B)
+    send(:B, :die_normally)
 
     receive do
       msg -> IO.inspect(msg, label: "A received")
@@ -284,7 +297,7 @@ end)
 
 ```elixir
 ## Cleanup
-for proc <- [A, B, C] do
+for proc <- [:A, :B] do
   proc
   |> Process.whereis()
   |> (fn
@@ -293,11 +306,6 @@ for proc <- [A, B, C] do
       end).()
 end
 ```
-
-### Excersise 6
-
-Please go to `ElixirSchool2025/class2/exercises/lib`  
-and try to solve exercise 6
 
 ## Links
 
@@ -308,8 +316,8 @@ IO.inspect(self(), label: "I am")
 
 a =
   spawn(fn ->
-    Process.register(self(), A)
-    IO.inspect({A, self()}, label: "I am")
+    Process.register(self(), :A)
+    IO.inspect({:A, self()}, label: "I am")
 
     receive do
       :crash -> 1 = 2
@@ -321,8 +329,8 @@ Process.sleep(100)
 
 b =
   spawn(fn ->
-    Process.register(self(), B)
-    IO.inspect({B, self()}, label: "I am")
+    Process.register(self(), :B)
+    IO.inspect({:B, self()}, label: "I am")
 
     Process.link(a)
 
@@ -344,32 +352,25 @@ b =
 
 Process.sleep(100)
 
-send(A, :crash)
-# send(A, :die_normally)
+send(:A, :crash)
+# send(:A, :die_normally)
 
 Process.sleep(100)
 
-IO.inspect(Process.alive?(a), label: "Final A info")
-IO.inspect(Process.alive?(b), label: "Final B info")
-# IO.inspect(Process.alive?(c), label: "Final C info")
+IO.inspect(Process.alive?(a), label: "Final A alive?")
+IO.inspect(Process.alive?(b), label: "Final B alive?")
+# IO.inspect(Process.alive?(c), label: "Final C alive?")
 ```
 
-### Exercise 7
-
-Please go to `ElixirSchool2025/class2/exercises/lib`  
-and try to solve exercise 7
-
-<!-- livebook:{"break_markdown":true} -->
-
-There is an option set a special process flag to trap exits. When `trap_exit` process flag is set to true, instread of receiving **exit signal** a process receives a message:
+There is an option set a special process flag to trap exits. When `trap_exit` process flag is set to true, instread of receiving **exit signal** a process receives a message - `{:EXIT, pid, reason}`
 
 ```elixir
 IO.inspect(self(), label: "I am")
 
 a =
   spawn(fn ->
-    Process.register(self(), A)
-    IO.inspect({A, self()}, label: "I am")
+    Process.register(self(), :A)
+    IO.inspect({:A, self()}, label: "I am")
 
     receive do
       :crash -> 1 = 2
@@ -381,11 +382,11 @@ Process.sleep(100)
 
 b =
   spawn(fn ->
-    Process.register(self(), B)
+    Process.register(self(), :B)
     Process.flag(:trap_exit, true)
-    IO.inspect({B, self()}, label: "I am")
+    IO.inspect({:B, self()}, label: "I am")
 
-    A
+    :A
     |> Process.whereis()
     |> Process.link()
 
@@ -400,17 +401,17 @@ b =
 
 Process.sleep(100)
 
-send(A, :crash)
+send(:A, :crash)
 
 Process.sleep(100)
 
-IO.inspect(Process.alive?(a), label: "Final A info")
-IO.inspect(Process.alive?(b), label: "Final B info")
+IO.inspect(Process.alive?(a), label: "Final A alive?")
+IO.inspect(Process.alive?(b), label: "Final B alive?")
 ```
 
 ```elixir
 ## Cleanup
-for proc <- [A, B] do
+for proc <- [:A, :B, :C] do
   proc
   |> Process.whereis()
   |> (fn
@@ -420,10 +421,10 @@ for proc <- [A, B] do
 end
 ```
 
-### Exercise 8 & 9 & 10
+### Exercise 6 - 9
 
 Please go to `ElixirSchool2025/class2/exercises/lib`  
-and try to solve exercises 8 & 9 & 10
+and try to solve exercises 6 - 9
 
 <!-- livebook:{"break_markdown":true} -->
 
