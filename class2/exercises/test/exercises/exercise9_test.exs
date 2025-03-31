@@ -6,6 +6,7 @@ defmodule Exercises.Exercise9Test do
     Process.register(self(), :test)
     Exercises.Exercise9.server()
     Process.sleep(100)
+    Exercises.Exercise9.client()
     pid_server = Process.whereis(:server)
     assert pid_server != nil, "Process :server should be started"
 

@@ -2,9 +2,11 @@
 
 ## Processes
 
-### git stash
+#### git pull
 
-### git pull
+#### git stash ; git pull - if just pull doesn't work
+
+#### Pretty please disable AI addons from your editor
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -17,21 +19,34 @@ Erlang and Elixir processes are:
 
 The theory behind a process is well explained in this blog post: https://www.erlang-solutions.com/blog/understanding-processes-for-elixir-developers/
 
+## Basics recall
+
+#### Printing on console
+
+```elixir
+msg = "hello"
+## inspect is kind of `printf` or `console.log` in other languages
+IO.inspect(msg)
+IO.inspect(msg, label: "this is label added before msg")
+```
+
+#### Creating lambda function
+
+```elixir
+lambda = fn -> 12 end
+lambda.()
+```
+
+
 ## Staring new process
 
-Use function `self/0` to determine what is PID (process ID) of current process.
+Use function `self/0` to determine the PID (process ID) of current process.
 
 ```elixir
 self()
 ```
 
-Get basic info about process using Erlang function `process_info/0`.
-
-```elixir
-self() |> :erlang.process_info()
-```
-
-Staring a new process can be done using `spawn/1` or `spawn/3` function.After spawning, new process is completly unrelated to the process was spawned by. There is no parent-child relation in oposition what you can see eg in Linux OS.
+Staring a new process can be done using `spawn/1` function. After spawning, new process is completly unrelated to the process was spawned by. There is no parent-child relation in oposition what you can see eg in Linux OS.
 
 ```elixir
 IO.inspect(self(), label: "I am parent process")
@@ -39,23 +54,120 @@ execute_fun = fn -> IO.inspect(self(), label: "I am child process") end
 spawn(execute_fun)
 ```
 
-```elixir
-defmodule PidPrinter do
-  def print_my_pid, do: IO.inspect(self(), label: "I am child process")
+A process terminates as soon as its starting function finishes execution.
 
-  def print_my_pid(extra), do: IO.inspect({self(), extra}, label: "I am child process")
-end
+```elixir
+pid = spawn(fn -> 
+        IO.inspect("starting a process")
+        Process.sleep(1000) 
+        IO.inspect("last line in a process function")
+      end)
+# process is alive
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+# waits after function completes its execution
+Process.sleep(1200)
+# process is terminated
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+
 ```
 
+A process can be shutdown during calculations via Process.exit/2
+
 ```elixir
-IO.inspect(self(), label: "I am parent process")
-spawn(&PidPrinter.print_my_pid/0)
-spawn(PidPrinter, :print_my_pid, ["XD"])
+pid = spawn(fn -> 
+        IO.inspect("starting a process")
+        Process.sleep(1000) 
+        # that line won't execute
+        IO.inspect("last line in a process function")
+      end)
+# process is alive
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+# waits after function completes its execution
+Process.exit(pid, :shutdown)
+# process is terminated
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+
+```
+
+Get basic info about process using Erlang function `process_info/0`.
+
+```elixir
+pid = spawn(fn -> Process.sleep(1000) end)
+pid |> Process.info()
+```
+
+## Comunication
+
+We can send messages to a process with `send/2` and receive them with `receive/1`:
+`receive` is blocking operation that waits for a message, while send returns immediately
+
+```elixir
+
+pid = spawn(fn ->
+    # receiving message
+    receive do
+      msg -> IO.inspect(msg, label: "I have received")
+    end
+end)
+
+# sending a message to unnamed process
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+send(pid, "Hello")
+Process.sleep(100)
+Process.alive?(pid) |> IO.inspect(label: "process alive?")
+
+```
+
+#### Quick recall of pattern matching
+
+```elixir
+msg = {:greetings, "hello"}
+case msg do
+    {:greetings, "hello"} -> "hi"
+    {:question, "how are u"} -> "ok"
+end    
+```
+
+### Comunication cont.
+
+When selectivly waiting the message may never arrive, therefore timeout part is added to the receive block:
+
+```elixir
+pid = spawn(fn -> 
+    receive do
+      {:greetings, content} -> IO.inspect(content, label: "I have received")
+    after
+      # timeout is in miliseconds
+      3000 -> IO.inspect(:timeout, label: "I have received")
+    end
+end)
+
+send(pid, {:question, "How are you?"})
+
+```
+
+Messages can be pattern-matched, and if a message doesn’t match any pattern, it stays in the process’s message queue.
+
+```elixir
+pid = spawn(fn ->
+    receive do
+      {:greetings, content} -> IO.inspect(content, label: "I have received")
+     after 
+       500 -> :ok 
+    end
+
+    ## This will never happen without after clause
+    IO.inspect("previous line wait's for {:greetings, ...} msg -  so the log statement won't be executed.")   
+end)
+
+ pid |> Process.info(:message_queue_len) |> IO.inspect()
+ send(pid, {:question, "How are you?"})
+ pid |> Process.info(:message_queue_len) |> IO.inspect()
 ```
 
 ### Naming processes
 
-Processe can be named so that we do not have to remember their PIDs and we can reffer to them from anywhere in BEAM (Erlang VM).
+Processe can be named via `Process.register/2` so that we do not have to remember their PIDs and we can reffer to them from anywhere in BEAM (Erlang VM).
 
 ```elixir
 execute_fun = fn ->
@@ -68,139 +180,61 @@ end
 
 spawn(execute_fun)
 
-## There is a race condition between process `:krzys` registering 
-## and current process looking up its pid based on it's name.
-## Comment out next line to (possibly) see that.
-Process.sleep(1000)
+# wait a bit for process registration
+Process.sleep(300)
 
 send(:krzys, "Hello")
 ```
 
-### Exercise 1 & 2
-
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
-
-## Comunication
-
-Processes do not share memeory, they are independent and **only** communicate via messages. All comunication is based on asyncronous communication.
-
-```elixir
-# sending message
-send(self(), "Hello")
-
-# receiving message
-receive do
-  msg -> IO.inspect(msg, label: "I have received")
-end
-```
-
-```elixir
-# self() |> :erlang.process_info(:message_queue_len) |> IO.inspect()
-# send(self(), {:question, "How are you?"})
-# self() |> :erlang.process_info(:message_queue_len) |> IO.inspect()
-# receive do
-#   {:greetings, content} -> IO.inspect(content, label: "I have received")
-# end
-# ## This will neve happen
-# self() |> :erlang.process_info(:message_queue_len) |> IO.inspect()
-# ## comment out after showing
-```
-
-After the previous block was executed there are some trash messages left in our main process. We can flush them by running following function:
-
-```elixir
-flush_fun = fn fun ->
-  receive do
-    msg ->
-      IO.inspect(msg)
-      fun.(fun)
-  after
-    0 ->
-      IO.inspect("flushing is done")
-      :ok
-  end
-end
-
-flush_fun.(flush_fun)
-```
-
-When selectivly waiting the message may never arrive, therefore timeout part is added to the receive block:
-
-```elixir
-send(self(), {:question, "How are you?"})
-
-receive do
-  {:greetings, content} -> IO.inspect(content, label: "I have received")
-after
-  # timeout is in miliseconds
-  3000 -> IO.inspect(:timeout, label: "I have received")
-end
-```
-
-### Exercise 3 & 4
-
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
-
-## Communication cont.
-
-We can use this block to implement our own `Process.sleep/1` function. And suprrise this is how it is done in the OTP itself: https://github.com/erlang/otp/blob/896518d196cd81ba26cb084827957a93b90220fb/lib/stdlib/src/timer.erl#L237
-
-```elixir
-sleep_fun = fn time ->
-  receive do
-  after
-    time -> :ok
-  end
-end
-
-sleep_fun.(3000)
-```
+### Communication cont.
 
 We can use selective receives to ensure that messages are consumed in particular order:
 
 ```elixir
-send(self(), {:question, "How are you?"})
+pid = spawn(fn ->
+    receive do
+      {:greetings, content} ->
+        IO.inspect(content, label: "I have received")
+    end
+
+    receive do
+      {:question, question} ->
+        IO.inspect(question, label: "I have received")
+    end
+end)
+send(pid, {:question, "How are you?"})
 Process.sleep(3000)
-send(self(), {:greetings, "Hello"})
+send(pid, {:greetings, "Hello"})
 
-receive do
-  {:greetings, content} ->
-    IO.inspect(content, label: "I have received")
-end
-
-receive do
-  {:question, question} ->
-    IO.inspect(question, label: "I have received")
-end
-
-# receive do
-#   {:greetings, content} ->
-#     IO.inspect(content, label: "I have received")
-#   {:question, question} ->
-#     IO.inspect(question, label: "I have received")
-# end
-# flush_fun.(flush_fun)
 ```
 
-### Exercise 5
+We can match against multiple patterns in a selective receive, but keep in mind that each receive still waits for only one message at a time.
 
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
+```elixir
+pid = spawn(fn -> 
+    receive do
+      {:greetings, content} ->
+        IO.inspect(content, label: "I have received")
+      {:question, question} ->
+        IO.inspect(question, label: "I have received")
+    end
+end)
+send(pid, {:question, "How are you?"})
+Process.sleep(3000)
+send(pid, {:greetings, "Hello"})
+
+```
+
+### Exercise 1 - 5
+
+Please go to `ElixirSchool2025/class2/exercises/lib`  
+and try to solve exercises 1 - 5
+
+Tu run tests please run `mix test --only test1` command in `ElixirSchool2025/class2/exercises` directory
 
 ## Monitors
 
-Monitor is a way of observing how some other is process doing. When process A monitors process B, and process B crushes, process A gets notified by receiving a message: `{'DOWN', ref, :process, pidB, reason}`. Monitors are unidrectional which means that if A monitors B, B does not know it is monitored.
-
-```elixir
-## Cleanup
-for proc <- [A, B, C] do
-  proc
-  |> Process.whereis()
-  |> (fn
-        nil -> :ok
-        pid -> Process.exit(pid, :kill)
-      end).()
-end
-```
+Monitor is a way of observing how some other process is doing. When process A monitors process B, and process B crushes, process A gets notified by receiving a message: `{'DOWN', ref, :process, pidB, reason}`. Monitors are unidrectional which means that if A monitors B, B does not know it is monitored.
 
 ```elixir
 pidB =
@@ -216,32 +250,54 @@ pidB =
 Process.alive?(pidB)
 ```
 
-Process can die in either normal or unnormal way. Normal is when it runs out of code do execute, and unnormal is when is crashses, eg by trying to match `2` to value `1`.
+Process can die in either normal or unnormal way. Normal is when it runs out of code do execute, and unnormal is when is crashses, for example by trying to match `2` to value `1`.
 
 ```elixir
-## Current process is emulating A process
-flush_fun.(flush_fun)
+# crash scenario
+spawn(fn -> 
+    Process.register(self(), A)
+    Process.monitor(B)
+    send(B, :crash)
 
-Process.monitor(B)
-send(B, :crash)
+    receive do
+      msg -> IO.inspect(msg, label: "A received")
+    after
+      0 -> :ok
+    end
+end)
+```
 
-receive do
-  msg -> IO.inspect(msg, label: "A received")
-after
-  0 -> :ok
+```elixir
+# normal termination scenario
+spawn(fn -> 
+    Process.register(self(), A)
+    Process.monitor(B)
+    send(B, :die_normally)
+
+    receive do
+      msg -> IO.inspect(msg, label: "A received")
+    after
+      0 -> :ok
+    end
+end)
+```
+
+```elixir
+## Cleanup
+for proc <- [A, B, C] do
+  proc
+  |> Process.whereis()
+  |> (fn
+        nil -> :ok
+        pid -> Process.exit(pid, :kill)
+      end).()
 end
-
-# Process.monitor(B)
-# send(B, :die_normally)
-# receive do
-#   msg -> IO.inspect(msg, label: "A received")
-#   after 1000 -> :ok
-# end
 ```
 
 ### Excersise 6
 
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
+Please go to `ElixirSchool2025/class2/exercises/lib`  
+and try to solve exercise 6
 
 ## Links
 
@@ -298,25 +354,14 @@ IO.inspect(Process.alive?(b), label: "Final B info")
 # IO.inspect(Process.alive?(c), label: "Final C info")
 ```
 
-### Excersise 7
+### Exercise 7
 
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
+Please go to `ElixirSchool2025/class2/exercises/lib`  
+and try to solve exercise 7
 
 <!-- livebook:{"break_markdown":true} -->
 
 There is an option set a special process flag to trap exits. When `trap_exit` process flag is set to true, instread of receiving **exit signal** a process receives a message:
-
-```elixir
-## Cleanup
-for proc <- [A, B] do
-  proc
-  |> Process.whereis()
-  |> (fn
-        nil -> :ok
-        pid -> Process.exit(pid, :kill)
-      end).()
-end
-```
 
 ```elixir
 IO.inspect(self(), label: "I am")
@@ -363,9 +408,22 @@ IO.inspect(Process.alive?(a), label: "Final A info")
 IO.inspect(Process.alive?(b), label: "Final B info")
 ```
 
-### Excersise 8 & 9 & 10
+```elixir
+## Cleanup
+for proc <- [A, B] do
+  proc
+  |> Process.whereis()
+  |> (fn
+        nil -> :ok
+        pid -> Process.exit(pid, :kill)
+      end).()
+end
+```
 
-Visit gosocrative.com and enter room name ELIXIRSCHOOL
+### Exercise 8 & 9 & 10
+
+Please go to `ElixirSchool2025/class2/exercises/lib`  
+and try to solve exercises 8 & 9 & 10
 
 <!-- livebook:{"break_markdown":true} -->
 

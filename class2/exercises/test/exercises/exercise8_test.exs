@@ -21,7 +21,7 @@ defmodule Exercises.Exercise8Test do
     assert Process.alive?(pid_hello) == false, "Process :hello should be terminated"
     assert Process.alive?(pid_world) == true, "Process :world should be alive"
 
-    assert_receive {:EXIT, pid_hello, _},
+    assert_receive {:EXIT, ^pid_hello, _},
                    100,
                    "Process :world should pass {:EXIT, ...} message to :test process"
   end

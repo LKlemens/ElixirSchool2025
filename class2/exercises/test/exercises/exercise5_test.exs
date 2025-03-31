@@ -7,17 +7,17 @@ defmodule Exercises.Exercise5Test do
     pid = Exercises.Exercise5.selective_receive()
     assert is_pid(pid) == true, "Function should return pid"
     Process.sleep(200)
-    IO.inspect("send first")
-    send(:hello, :first)
+    IO.inspect("send world")
+    send(:hello, :world)
     Process.sleep(200)
-    IO.inspect("send second")
-    send(:hello, :second)
+    IO.inspect("send hello")
+    send(:hello, :hello)
 
-    assert_receive :second,
+    assert_receive :world,
                    1000,
                    "Process :hello should send :second msg to :test process as first message"
 
-    assert_receive :first,
+    assert_receive :hello,
                    1000,
                    "Process :hello should send :first msg to :test process as second message"
   end

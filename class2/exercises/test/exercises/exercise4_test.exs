@@ -8,11 +8,13 @@ defmodule Exercises.Exercise4Test do
     assert is_pid(pid) == true, "Function should return pid"
 
     refute_receive :timeout,
-                   300,
+                   490,
                    ":test process should get :timeout message after 500ms - not earlier"
 
     assert Process.alive?(pid) == true, "Process should wait for a :ping message"
-    Process.sleep(300)
-    assert_receive :timeout, 200, "Process :hello should send :timeout msg to :test process"
+
+    assert_receive :timeout,
+                   50,
+                   "Process :hello should send :timeout msg to :test process after 500ms"
   end
 end

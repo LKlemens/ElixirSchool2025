@@ -10,19 +10,24 @@ defmodule Exercises.Exercise6 do
       - wait 1500ms 
       - print ":world is alive!" if process :world is alive
       - print ":world is dead!" otherwise
+   - explain why :world process is alive or dead
    input: none
    returns: pid
+
+
+  to test run in console:
+    mix test --only test6
   """
   def process_monitor() do
-    pid =
+    hello =
       spawn(fn ->
+        Process.register(self(), :hello)
+
         receive do
           :bad_msg -> raise("error")
           :die_normally -> :ok
         end
       end)
-
-    Process.register(pid, :hello)
 
     # write here your code
   end

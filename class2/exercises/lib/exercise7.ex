@@ -7,10 +7,16 @@ defmodule Exercises.Exercise7 do
      - wait for next message
    - spawn a new unregistered process, 
       - wait 1500ms 
-      - print ":world is alive!" if process :world is alive
-      - print ":world is dead!" otherwise
+      - check if process :world is alive and:
+        - send to :test process ":world is alive!" if process :world is alive
+        - send to :test process ":world is dead!" otherwise
+    - explain why :world process is alive or dead
    input: none
    returns: pid
+
+
+  to test run in console:
+   mix test --only test7
   """
   def process_link() do
     pid_hello =
