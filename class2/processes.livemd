@@ -431,6 +431,10 @@ end
 Please go to `ElixirSchool2025/class2/exercises/lib`  
 and try to solve exercises 6 - 9
 
+## Last but not least
+
+Please visit https://github.com/LKlemens/ElixirSchool2025
+
 <!-- livebook:{"break_markdown":true} -->
 
 ### My email
