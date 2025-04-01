@@ -19,7 +19,7 @@ defmodule Exercises.Exercise6 do
     mix test --only test6
   """
   def process_monitor() do
-    hello =
+    _hello =
       spawn(fn ->
         Process.register(self(), :hello)
 
