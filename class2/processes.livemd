@@ -253,7 +253,7 @@ Tu run tests please run `mix test --only test1` command in `ElixirSchool2025/cla
 
 Monitor is a way of observing how some other process is doing. When process A monitors process B, and process B crushes, process A gets notified by receiving a message: `{:DOWN, ref, :process, pidB, reason}`. Monitors are unidrectional which means that if A monitors B, B does not know it is monitored.
 
-Process can die in either normal or unnormal way. Normal is when it runs out of code do execute, and unnormal is when is crashses, for example by trying to match `2` to value `1`.
+Process can die in either normal or unnormal way. Normal is when it runs out of code to execute, and unnormal is when it crashses, for example by trying to match `2` to value `1`.
 
 ```elixir
 spawn(fn ->
