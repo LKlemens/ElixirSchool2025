@@ -2,7 +2,7 @@ defmodule Exercises.Exercise4Test do
   use ExUnit.Case, async: false
 
   @tag :test4
-  test "Should send :timeout messgae after 500ms" do
+  test "Should send :timeout message after 500ms" do
     Process.register(self(), :test)
     pid = Exercises.Exercise4.send_timeout()
     assert is_pid(pid) == true, "Function should return pid"

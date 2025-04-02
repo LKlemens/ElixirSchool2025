@@ -2,7 +2,7 @@ defmodule Exercises.Exercise3Test do
   use ExUnit.Case, async: false
 
   @tag :"test3.1"
-  test "Should return pid, register it under :hello name, handle msg and termiante" do
+  test "Should return pid, register it under :hello name, handle msg and terminate" do
     pid = Exercises.Exercise3.wait_and_print()
     assert is_pid(pid) == true, "Function should return pid"
     Process.sleep(300)
