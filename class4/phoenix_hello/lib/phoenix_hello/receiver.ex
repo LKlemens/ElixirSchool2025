@@ -13,16 +13,16 @@ defmodule PhoenixHello.Receiver do
   @doc """
     Function that sends msg to Receiver process started on connected node and returns response from it.   
   """
-  def send_msg(msg) do
-    # write your code gere
+  def send_msg(_msg) do
+    # write your code here
   end
 
   @doc """
     Function that sends msg to all Receiver processes in a cluster including the node from which msg was sent
     and returns list of responses from nodes. 
   """
-  def send_msg_to_all_nodes(msg) do
-    # write your code gere
+  def send_msg_to_all_nodes(_msg) do
+    # write your code here
   end
 
   @impl GenServer

@@ -17,7 +17,7 @@ defmodule PhoenixHelloWeb.Router do
   scope "/", PhoenixHelloWeb do
     pipe_through(:browser)
 
-    # TODO exercise6 add live endpoint here
+    # TODO exercise9 add live endpoint here
     live("/hello", TimeLive)
   end
 

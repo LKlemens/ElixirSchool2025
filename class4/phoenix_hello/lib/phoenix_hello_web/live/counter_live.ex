@@ -2,9 +2,9 @@ defmodule PhoenixHelloWeb.CounterLive do
   use PhoenixHelloWeb, :live_view
 
   def render(assigns) do
-    # TODO display counter and add button "Add +1"
+    # TODO exercise9 display counter and add button "Add +1"
     ~H"""
-    <p>exercise6</p>
+    <p>todo</p>
     """
   end
 
@@ -16,7 +16,7 @@ defmodule PhoenixHelloWeb.CounterLive do
   end
 
   def handle_event("counter", _params, socket) do
-    # TODO update counter here
+    # TODO exercise9 update counter here
     {:noreply, socket}
   end
 end

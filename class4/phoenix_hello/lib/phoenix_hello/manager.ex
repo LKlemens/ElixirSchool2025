@@ -16,6 +16,7 @@ defmodule PhoenixHello.Manager do
     GenServer.call(pid, :get_name)
   end
 
+  @impl GenServer
   def handle_call(:get_name, _from, name) do
     {:reply, name, name}
   end

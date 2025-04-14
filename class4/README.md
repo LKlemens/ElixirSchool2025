@@ -27,8 +27,14 @@ Nodes have to have the same cookie value.
 iex --sname node1@localhost
 ```
 
+and in separate terminal
+```
+iex --sname node2@localhost
+```
+
 ##### To connect a node:
 
+run on node2
 ```
 iex(1)> Node.connect(:node1@localhost)
 true
@@ -37,8 +43,25 @@ true
 ##### To send a message to different node:
 
 ```
-iex(1)> send({pid/name, node}, msg)
-msg
+# send({name, node}, msg)
+iex(1)>  send({PhoenixHello.Receiver, :node1}, "hello")
+"hello"
+```
+
+##### To register process globally
+```
+iex(1)> pid=spawn(fn -> receive do msg -> IO.inspect(msg, label: "got msg ###########") end end)
+iex(2)> :global.register_name(:hello, pid)
+:yes
+```
+
+
+##### To send a message to different node:
+
+```
+iex(1)> pid=:global.whereis_name(:hello)
+iex(2)> send(pid, "msg from node2")
+"hello"
 ```
 
 ##### To list connected nodes:
@@ -55,8 +78,16 @@ iex(1)> Node.self()
 :nonode@nohost
 ```
 
+##### To get node cookie:
+
+```
+iex(1)> Node.get_cookie()
+:FNAUFTWDKWYLXSUSHDBV
+```
+
 ##### Exercise 1
 
+- cd class4/phoenix_hello
 - Run two nodes - `:node1` and `:node2`
   - PORT=4005 iex --sname node1@localhost -S mix phx.server
   - PORT=4006 iex --sname node2@localhost -S mix phx.server
@@ -64,7 +95,8 @@ iex(1)> Node.self()
 - Start `Receiver.start_link()` on node1
 - Start `Receiver.start_link()` on node2
 - Implement `send_msg` function in `phoenix_hello/receiver.ex` file
-- Run test `PhoenixHello.Tests.exercise1()`
+- Run test `PhoenixHello.Receiver.send_msg("hello")` on both nodes
+- explain results
 
 ##### Exercise 2
 
@@ -73,14 +105,49 @@ iex(1)> Node.self()
 - Start `Receiver.start_link()` on node1
 - Start `Receiver.start_link()` on node2
 - Implement `send_msg_to_all_nodes` function in `phoenix_hello/receiver.ex` file
-- Run test `PhoenixHello.Tests.exercise2()`
+- explain results
+
+##### Exercise 3
+
+- Register Receiver Genserver [globally](https://hexdocs.pm/elixir/1.18.2/GenServer.html#module-name-registration)
+- Run two nodes - `:node1` and `:node2`
+- Connect those nodes
+- fix functions send_msg & send_msg_to_all_nodes
+    - hint: use :global.whereis_name
+- Start `Receiver.start_link()` on node1
+- Start `Receiver.start_link()` on node2
+- Run `send_msg` `send_msg_to_all_nodes`
+- explain results
+
+
+##### Exercise 4
+
+- Run three nodes - `:node1`, `:node2` & `:node3`
+    - iex --sname node1@localhost
+    - iex --sname node2@localhost
+    - iex --sname node3@localhost
+- Connect node1 to node2
+    - check Node.list()
+- Connect node3 to node1
+    - check Node.list()
+- explain results
+
+
+##### Exercise 5
+
+- Run two nodes with cookies
+    - iex --cookie 111 --sname node1@localhost
+    - iex --cookie 222 node2@localhost
+- Connect node1 to node2
+    - check Node.list()
+- explain results
 
 ### Horde
 
 [Horde](https://github.com/derekkraan/horde) is a library providing distributed registry and supervisor.
 Horde ensures that processes will keep working when nodes or connection fail.
 
-##### Exercise 3
+##### Exercise 6
 
 - kill nodes
 - uncomment Horde.Registry & PhoenixHello.ManagerSupervisor in `phoenix_hello/application.ex`
@@ -97,16 +164,17 @@ Horde ensures that processes will keep working when nodes or connection fail.
 
 Automatically forming clusters of Erlang nodes
 
-##### Exercise 4
+##### Exercise 7
 
 - setup libcluster configuration in `phoenix_hello/application.ex`
 - run two nodes and check if there are connected automatically `Node.list()`
 
 ### Loadbalancing & Horde
 
-##### Exercise 5
+##### Exercise 8
 
-- install caddy
+
+- install [caddy](https://caddyserver.com/docs/install#static-binaries)
 - run caddy `caddy run` in `phoenix_hello` dir
 - start 2 nodes on ports 4005, 4006
 - open https://localhost:8080/hello
@@ -120,10 +188,13 @@ Automatically forming clusters of Erlang nodes
 
 ### LiveView
 
-##### Exercise 6
+##### Exercise 9
 
 - Add CounterLive to Router moduel
 - Implement CounterLive by adding a button which increases counter by one and diplay a counter value
+
+
+#### [Last task](https://docs.google.com/forms/d/e/1FAIpQLScC7H7rlYuvaNd-xmnVzba7Kw3Sn56e5Ang0fCXspaUKG6EGw/viewform?usp=sharing)
 
 #### Email
 
@@ -134,4 +205,4 @@ klemens.lukaszczyk@erlang-solutions.com
 - [PhoenixLiveView](https://pragprog.com/titles/liveview/programming-phoenix-liveview/) book
 - [Elixir in Action 3rd Edition](https://www.amazon.com/Elixir-Action-Third-Sa%C5%A1a-Juric-ebook/dp/B0CVHVWP9M?ref_=ast_author_dp)
 
-#### [Ankieta](https://docs.google.com/forms/d/e/1FAIpQLScs3lz9a2qJV2cTTzkzwWUp9Qhs4cO31MDo3N43fqxxKloVtA/viewform)
+

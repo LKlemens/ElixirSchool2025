@@ -7,11 +7,11 @@ defmodule PhoenixHello.Application do
 
   @impl true
   def start(_type, _args) do
-    # exercise4: setup libcluster strategy that automatically connects node on localhost
+    # exercise7: setup libcluster strategy that automatically connects node on localhost
     # https://hexdocs.pm/libcluster/readme.html#strategy-configuration
     # topologies = [
     #   example: [
-    #     strategy: strategy,
+    #     strategy: choose_strategy,
     #     config: [timeout: 1000]
     #   ]
     # ]
@@ -22,9 +22,9 @@ defmodule PhoenixHello.Application do
       {Phoenix.PubSub, name: PhoenixHello.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: PhoenixHello.Finch},
-      # exercise4: uncomment
+      # exercise7: uncomment
       # {Cluster.Supervisor, [topologies, [name: PhoenixHello.ClusterSupervisor]]},
-      # exercice3: uncomment Horde.Registry & PhoenixHello.ManagerSupervisor
+      # exercice6: uncomment Horde.Registry & PhoenixHello.ManagerSupervisor
       # {Horde.Registry, [name: PhoenixHello.DistributedRegistry, keys: :unique, members: :auto]},
       # {PhoenixHello.ManagerSupervisor,
       #  strategy: :one_for_one, members: :auto, process_redistribution: :active},
