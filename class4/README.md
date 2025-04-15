@@ -137,7 +137,7 @@ iex(1)> Node.get_cookie()
 
 - Run two nodes with cookies
     - iex --cookie 111 --sname node1@localhost
-    - iex --cookie 222 node2@localhost
+    - iex --cookie 222 --sname node2@localhost
 - Connect node1 to node2
     - check Node.list()
 - explain results

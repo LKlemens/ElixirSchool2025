@@ -11,7 +11,7 @@ defmodule PhoenixHello.Receiver do
   end
 
   @doc """
-    Function that sends msg to Receiver process started on connected node and returns response from it.   
+    Function that sends msg to Receiver process started on connected node.
   """
   def send_msg(_msg) do
     # write your code here

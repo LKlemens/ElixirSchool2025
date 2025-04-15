@@ -59,10 +59,7 @@ defmodule PhoenixHelloWeb.TimeLive do
   end
 
   defp list_of_running_managers() do
-    Horde.DynamicSupervisor.which_children(PhoenixHello.ManagerSupervisor)
-    |> Enum.map(fn {_, pid, _, _} ->
-      PhoenixHello.Manager.get_name(pid)
-    end)
+    Horde.Registry.select(PhoenixHello.DistributedRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.sort()
   end
 
