@@ -196,6 +196,9 @@ Automatically forming clusters of Erlang nodes
 
 #### [Last task](https://docs.google.com/forms/d/e/1FAIpQLScC7H7rlYuvaNd-xmnVzba7Kw3Sn56e5Ang0fCXspaUKG6EGw/viewform?usp=sharing)
 
+#### [Challenge](https://github.com/LKlemens/elixir_challenge)
+
+
 #### Email
 
 klemens.lukaszczyk@erlang-solutions.com
